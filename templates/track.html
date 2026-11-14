@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<form class="card filter-form" method="get"><div><label for="shipment">Shipment ID</label><input id="shipment" name="shipment" placeholder="e.g. S1" value="{{ request.args.get('shipment', '') }}" required></div><button class="button">Track shipment</button></form>
+{% if shipment %}
+<section class="card section"><div class="section-heading"><h2>{{ shipment.id }} <span class="muted">{{ shipment.origin }} → {{ shipment.destination }}</span></h2><span class="badge">{{ status(shipment)|replace('_', ' ')|title }}</span></div>
+<dl class="details"><div><dt>Shipper</dt><dd>{{ shipment.shipper }}</dd></div><div><dt>Weight</dt><dd>{{ '%g'|format(shipment.weight) }} kg</dd></div><div><dt>Promised date</dt><dd>{{ shipment.promised }}</dd></div><div><dt>Departure</dt><dd>{{ shipment.departure or 'Unbooked' }}</dd></div><div><dt>Delivery outcome</dt><dd>{{ outcome(shipment) }}</dd></div></dl></section>
+<section class="card section"><h2>Movement history</h2>{% set headers = ['Scan', 'Hub', 'Status', 'Timestamp', 'Elapsed hours'] %}{% set rows = scans %}{% include 'result_rows.html' %}</section>
+{% else %}<div class="empty card section">Enter a shipment ID to view its status and complete scan history.</div>{% endif %}
+{% endblock %}

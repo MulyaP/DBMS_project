@@ -1,0 +1,2 @@
+{% extends 'base.html' %}
+{% block content %}<p class="intro">The six required analytical queries, in the professor’s numbering order.</p><div class="query-list">{% for title, description in queries %}<a class="card query-row" href="{{ url_for('query', index=loop.index) }}"><span class="query-number">{{ loop.index }}</span><div><h2>{{ title }}</h2><p>{{ description }}</p></div><span aria-hidden="true">→</span></a>{% endfor %}</div>{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<p class="intro">Manage freight from booking through delivery. Choose your role to sign in, or explore the six analytical queries.</p>
+<div class="cards">
+  {% for role, subtitle, description in [('shipper', 'YOUR FREIGHT', 'Create shipments, reserve capacity, and follow delivery progress.'), ('carrier', 'YOUR OPERATIONS', 'Manage vehicles and departures, record scans, and review performance.'), ('viewer', 'NETWORK VISIBILITY', 'Track freight and explore published delivery reports.')] %}
+  <section class="card role-card"><p class="eyebrow">{{ subtitle }}</p><h2>{{ role|title }}</h2><p>{{ description }}</p><a class="button" href="{{ url_for('login', role=role) }}">{{ role|title }} sign in <span aria-hidden="true">→</span></a></section>
+  {% endfor %}
+</div>
+<section class="card section"><h2>Sample accounts</h2><p class="muted">Use password <code>demo123</code> for any account below.</p><div class="table-wrap"><table><thead><tr><th>User ID</th><th>Account</th><th>Role</th></tr></thead><tbody>{% for a in accounts %}<tr><td><strong>{{ a.id }}</strong></td><td>{{ a.name }}</td><td>{{ a.role|title }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if description %}<p class="intro">{{ description }}</p>{% endif %}
+<form class="card edit-form" method="post">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  {% for f in fields %}
+  <label for="{{ f.name }}">{{ f.label }}</label>
+  {% set selected = request.form.get(f.name, f.value)|string %}
+  {% if f.kind == 'select' %}
+  <select id="{{ f.name }}" name="{{ f.name }}" {% if f.required %}required{% endif %}><option value="">Select {{ f.label|lower }}</option>{% for value, label in f.options %}<option value="{{ value }}" {{ 'selected' if selected == value|string }}>{{ label }}</option>{% endfor %}</select>
+  {% else %}<input id="{{ f.name }}" name="{{ f.name }}" type="{{ f.kind }}" value="{{ selected if f.kind != 'password' else '' }}" {% if f.required %}required{% endif %} {% if f.kind == 'number' %}step="any"{% endif %} {% if f.kind == 'password' %}autocomplete="current-password"{% endif %}>
+  {% endif %}
+  {% endfor %}
+  <div class="form-actions"><button class="button" type="submit">{{ button }}</button><a class="button secondary" href="{{ back }}">Cancel</a></div>
+</form>
+{% endblock %}

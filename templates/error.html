@@ -1,0 +1,2 @@
+{% extends 'base.html' %}
+{% block content %}<section class="card edit-form"><p>{{ message }}</p><a class="button" href="{{ url_for('dashboard') if user else url_for('home') }}">Return to workspace</a></section>{% endblock %}

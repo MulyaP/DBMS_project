@@ -3,40 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title }} Â· Freight Desk</title>
+  <title>{{ title }} - Freight Desk</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="{{ url_for('dashboard') if user else url_for('home') }}"><span class="brand-mark">FD</span> Freight Desk</a>
-    <div class="account">{% if user %}<span>{{ user.name }} <small>{{ user.role|title }} Â· {{ user.id }}</small></span><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="quiet">Log out</button></form>{% else %}<span>CSC 540 Â· Logistics project</span>{% endif %}</div>
+    <a class="brand" href="{{ url_for('dashboard') if user else url_for('home') }}">
+      <span class="brand-mark">FD</span> Freight Desk
+    </a>
+    <div class="account">
+      {% if user %}
+        <span>
+          {{ user.name }}
+          <small>{{ user.role|title }} - {{ user.id }}</small>
+        </span>
+        <form method="post" action="{{ url_for('logout') }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="quiet">Log out</button>
+        </form>
+      {% else %}
+        <span>CSC 540 - Logistics project</span>
+      {% endif %}
+    </div>
   </header>
+
   <div class="shell">
     <aside>
-      <p class="nav-label">WORKSPACE</p>
+      <p class="nav-label">MENU</p>
       <nav aria-label="Main navigation">
         {% if user %}
-        <a class="{{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">Overview</a>
-        <a class="{{ 'active' if request.endpoint == 'shipments' }}" href="{{ url_for('shipments') }}">Shipments</a>
-        <a class="{{ 'active' if request.endpoint == 'track' }}" href="{{ url_for('track') }}">Track shipment</a>
-        {% if user.role == 'carrier' %}
-        <a class="{{ 'active' if request.endpoint == 'vehicles' }}" href="{{ url_for('vehicles') }}">Vehicles</a>
-        <a class="{{ 'active' if request.endpoint == 'departures' }}" href="{{ url_for('departures') }}">Departures</a>
-        <a class="{{ 'active' if request.endpoint == 'scan_form' }}" href="{{ url_for('scan_form') }}">Post scan event</a>
+          <a class="{{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">Overview</a>
+          <a class="{{ 'active' if request.endpoint == 'shipments' }}" href="{{ url_for('shipments') }}">Shipments</a>
+          <a class="{{ 'active' if request.endpoint == 'track' }}" href="{{ url_for('track') }}">Track shipment</a>
+          {% if user.role == 'carrier' %}
+            <a class="{{ 'active' if request.endpoint == 'vehicles' }}" href="{{ url_for('vehicles') }}">Vehicles</a>
+            <a class="{{ 'active' if request.endpoint == 'departures' }}" href="{{ url_for('departures') }}">Departures</a>
+            <a class="{{ 'active' if request.endpoint == 'scan_form' }}" href="{{ url_for('scan_form') }}">Post scan event</a>
+          {% endif %}
+          <p class="nav-label">REPORTS</p>
+          {% for key, label in reports[user.role] %}
+            <a class="{{ 'active' if request.endpoint == 'report' and request.view_args.get('kind') == key }}"
+               href="{{ url_for('report', kind=key) }}">{{ label }}</a>
+          {% endfor %}
+        {% else %}
+          <a href="{{ url_for('home') }}">Home &amp; sign in</a>
         {% endif %}
-        <p class="nav-label">REPORTS</p>
-        {% for key, label in reports[user.role] %}<a class="{{ 'active' if request.endpoint == 'report' and request.view_args.get('kind') == key }}" href="{{ url_for('report', kind=key) }}">{{ label }}</a>{% endfor %}
-        {% else %}<a href="{{ url_for('home') }}">Home & sign in</a>{% endif %}
-        <p class="nav-label">ANALYTICS</p>
-        <a class="{{ 'active' if request.endpoint in ['queries', 'query'] }}" href="{{ url_for('queries') }}">View queries <span class="count">6</span></a>
+        <p class="nav-label">QUERIES</p>
+        <a class="{{ 'active' if request.endpoint in ['queries', 'query'] }}" href="{{ url_for('queries') }}">
+          View queries <span class="count">6</span>
+        </a>
       </nav>
-      <div class="sidebar-note"><span class="dot"></span> {{ 'Database workspace' if db_ready else 'Database unavailable' }}<small>{{ 'Changes are saved to MariaDB.' if db_ready else 'Check your connection settings.' }}</small></div>
+      <div class="sidebar-note">
+        <span class="dot"></span> {{ 'Freight database' if db_ready else 'Database unavailable' }}
+        <small>{{ 'Changes are saved to MariaDB.' if db_ready else 'Check your connection settings.' }}</small>
+      </div>
     </aside>
+
     <main>
-      <div class="page-heading"><div><p class="eyebrow">REGIONAL FREIGHT OPERATIONS</p><h1>{{ title }}</h1></div>{% block actions %}{% endblock %}</div>
-      {% for category, message in get_flashed_messages(with_categories=true) %}<div class="notice {{ category }}" role="alert">{{ message }}</div>{% endfor %}
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">CSC 540 LOGISTICS PROJECT</p>
+          <h1>{{ title }}</h1>
+        </div>
+        {% block actions %}{% endblock %}
+      </div>
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="notice {{ category }}" role="alert">{{ message }}</div>
+      {% endfor %}
       {% block content %}{% endblock %}
-      <footer>Freight Desk <span>CSC 540 Â· Application prototype</span></footer>
+      <footer>
+        Freight Desk <span>CSC 540 - Logistics project</span>
+      </footer>
     </main>
   </div>
 </body>

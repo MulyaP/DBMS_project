@@ -47,9 +47,9 @@ your local Flask process network access to that server.
 
 The selected database must already contain the objects and data from these files:
 
-1. sql/01_schema.sql — schema, constraints, booking procedure, scan triggers, views.
-2. sql/02_sample_data.sql — the professor's supplied data and seed checks.
-3. sql/03_queries.sql — the six required analytical queries.
+1. sql/01_schema.sql: schema, constraints, booking procedure, scan triggers, views.
+2. sql/02_sample_data.sql: the professor's supplied data and seed checks.
+3. sql/03_queries.sql: the six required analytical queries.
 
 These are installation scripts for empty project tables. After initial loading,
 use check-db to verify the connection and required objects. It does not reload data.
@@ -113,7 +113,7 @@ and recheck its booked load before updating it.
 The View Queries screens execute the six SELECT statements read directly from
 sql/03_queries.sql, with values bound through the driver. Additional role reports
 also use SQL, including window functions for rankings and cumulative totals.
-Use Python Decimal for weights and capacities throughout writes.
+Weights and capacities use Python Decimal values when saving records.
 
 ## Connection troubleshooting
 

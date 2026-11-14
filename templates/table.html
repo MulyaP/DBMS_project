@@ -1,2 +1,10 @@
 {% extends 'base.html' %}
-{% block content %}{% if description %}<p class="intro">{{ description }}</p>{% endif %}<section class="card">{% include 'result_rows.html' %}</section>{% endblock %}
+
+{% block content %}
+  {% if description %}
+    <p class="intro">{{ description }}</p>
+  {% endif %}
+  <section class="card">
+    {% include 'result_rows.html' %}
+  </section>
+{% endblock %}

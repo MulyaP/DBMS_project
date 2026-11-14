@@ -1,13 +1,65 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<p class="intro">{% if public %}Network-wide query results.{% else %}{{ 'Published network report.' if user.role == 'viewer' else 'Results limited to your account.' }}{% endif %}</p>
-<form class="card filter-form" method="get"><input type="hidden" name="run" value="1">
-{% if kind in ['summary', 'lane', 'carrier', 'volume', 'top', 'utilization', 'load', 'running', 'weight'] %}
-<div><label for="start">Start date</label><input type="date" id="start" name="start" value="{{ request.args.get('start', '2026-01-01') }}" required></div><div><label for="end">End date</label><input type="date" id="end" name="end" value="{{ request.args.get('end', '2026-12-31') }}" required></div>{% endif %}
-{% if kind == 'dwell' %}<div><label for="shipment">Shipment ID</label><input id="shipment" name="shipment" value="{{ request.args.get('shipment', '') }}" placeholder="e.g. S1" required></div>{% endif %}
-{% if kind in ['top', 'utilization', 'risk'] %}<div><label for="n">{{ 'N days' if kind == 'risk' else 'Top N ranks' }}</label><input type="number" id="n" name="n" min="0" max="10000" value="{{ request.args.get('n', '3') }}" required></div>{% endif %}
-{% if kind in ['running', 'weight'] %}<div><label for="carrier">Carrier ID (optional)</label><input id="carrier" name="carrier" placeholder="All carriers" value="{{ request.args.get('carrier', '') }}"></div>{% endif %}
-<button class="button">Run {{ 'query' if public else 'report' }}</button></form>
-{% if headers %}<section class="card section"><div class="section-heading"><h2>Results</h2><span class="muted">{{ rows|length }} rows</span></div>{% include 'result_rows.html' %}</section>{% else %}<div class="card empty section">Choose your filters and run the {{ 'query' if public else 'report' }}.</div>{% endif %}
-<p class="help">{{ description }}{% if kind == 'risk' %} The promise window is measured from today, {{ today }}.{% endif %}{% if kind == 'volume' %} Volume is measured in kilograms.{% endif %}</p>
+  <p class="intro">
+    {% if public %}
+      Query results for all accounts.
+    {% else %}
+      {{ 'Delivery report for all accounts.' if user.role == 'viewer' else 'Results for your account.' }}
+    {% endif %}
+  </p>
+  <form class="card filter-form" method="get">
+    <input type="hidden" name="run" value="1">
+    {% if kind in ['summary', 'lane', 'carrier', 'volume', 'top', 'utilization', 'load', 'running', 'weight'] %}
+      <div>
+        <label for="start">Start date</label>
+        <input type="date" id="start" name="start"
+               value="{{ request.args.get('start', '2026-01-01') }}" required>
+      </div>
+      <div>
+        <label for="end">End date</label>
+        <input type="date" id="end" name="end"
+               value="{{ request.args.get('end', '2026-12-31') }}" required>
+      </div>
+    {% endif %}
+    {% if kind == 'dwell' %}
+      <div>
+        <label for="shipment">Shipment ID</label>
+        <input id="shipment" name="shipment" value="{{ request.args.get('shipment', '') }}"
+               placeholder="e.g. S1" required>
+      </div>
+    {% endif %}
+    {% if kind in ['top', 'utilization', 'risk'] %}
+      <div>
+        <label for="n">{{ 'N days' if kind == 'risk' else 'Top N ranks' }}</label>
+        <input type="number" id="n" name="n" min="0" max="10000"
+               value="{{ request.args.get('n', '3') }}" required>
+      </div>
+    {% endif %}
+    {% if kind in ['running', 'weight'] %}
+      <div>
+        <label for="carrier">Carrier ID (optional)</label>
+        <input id="carrier" name="carrier" placeholder="All carriers"
+               value="{{ request.args.get('carrier', '') }}">
+      </div>
+    {% endif %}
+    <button class="button">Run {{ 'query' if public else 'report' }}</button>
+  </form>
+
+  {% if headers %}
+    <section class="card section">
+      <div class="section-heading">
+        <h2>Results</h2>
+        <span class="muted">{{ rows|length }} rows</span>
+      </div>
+      {% include 'result_rows.html' %}
+    </section>
+  {% else %}
+    <div class="card empty section">Choose your filters and run the {{ 'query' if public else 'report' }}.</div>
+  {% endif %}
+  <p class="help">
+    {{ description }}
+    {% if kind == 'risk' %}The promise window is measured from today, {{ today }}.{% endif %}
+    {% if kind == 'volume' %}Volume is measured in kilograms.{% endif %}
+  </p>
 {% endblock %}

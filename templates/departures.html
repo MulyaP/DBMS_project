@@ -1,3 +1,53 @@
 {% extends 'base.html' %}
-{% block actions %}<a class="button" href="{{ url_for('departure_form') }}">+ Schedule departure</a>{% endblock %}
-{% block content %}<p class="intro">Scheduled departures operated by your carrier. All weights are in kilograms.</p><section class="card"><div class="table-wrap"><table><thead><tr><th>Departure</th><th>Vehicle</th><th>Lane</th><th>Scheduled</th><th>Capacity</th><th>Booked</th><th>Remaining</th><th>Utilization</th><th></th></tr></thead><tbody>{% for d in departures %}{% set booked = d.booked %}<tr><td><strong>{{ d.id }}</strong></td><td>{{ d.vehicle }}</td><td class="nowrap">{{ d.origin }} â†’ {{ d.destination }}</td><td class="nowrap">{{ d.time }}</td><td>{{ '%g'|format(d.capacity) }}</td><td>{{ '%g'|format(booked) }}</td><td>{{ '%g'|format(d.capacity - booked) }}</td><td><div class="meter"><span style="width:{{ booked / d.capacity * 100 }}%"></span></div>{{ '%.1f'|format(booked / d.capacity * 100) }}%</td><td><a href="{{ url_for('departure_form', ident=d.id) }}">Edit</a></td></tr>{% else %}<tr><td colspan="9" class="empty">No departures scheduled.</td></tr>{% endfor %}</tbody></table></div></section>{% endblock %}
+
+{% block actions %}
+  <a class="button" href="{{ url_for('departure_form') }}">+ Schedule departure</a>
+{% endblock %}
+
+{% block content %}
+  <p class="intro">Your carrier's scheduled departures. All weights are in kilograms.</p>
+  <section class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Departure</th>
+            <th>Vehicle</th>
+            <th>Lane</th>
+            <th>Scheduled</th>
+            <th>Capacity</th>
+            <th>Booked</th>
+            <th>Remaining</th>
+            <th>Utilization</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in departures %}
+            {% set booked = d.booked %}
+            <tr>
+              <td><strong>{{ d.id }}</strong></td>
+              <td>{{ d.vehicle }}</td>
+              <td class="nowrap">{{ d.origin }} to {{ d.destination }}</td>
+              <td class="nowrap">{{ d.time }}</td>
+              <td>{{ '%g'|format(d.capacity) }}</td>
+              <td>{{ '%g'|format(booked) }}</td>
+              <td>{{ '%g'|format(d.capacity - booked) }}</td>
+              <td>
+                <div class="meter">
+                  <span style="width:{{ booked / d.capacity * 100 }}%"></span>
+                </div>
+                {{ '%.1f'|format(booked / d.capacity * 100) }}%
+              </td>
+              <td><a href="{{ url_for('departure_form', ident=d.id) }}">Edit</a></td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="9" class="empty">No departures scheduled.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

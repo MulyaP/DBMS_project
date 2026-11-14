@@ -1,8 +1,49 @@
 {% extends 'base.html' %}
-{% block actions %}{% if user.role == 'shipper' %}<a class="button" href="{{ url_for('shipment_form') }}">+ Create shipment</a>{% elif user.role == 'carrier' %}<a class="button" href="{{ url_for('scan_form') }}">+ Post scan</a>{% endif %}{% endblock %}
+
+{% block actions %}
+  {% if user.role == 'shipper' %}
+    <a class="button" href="{{ url_for('shipment_form') }}">+ Create shipment</a>
+  {% elif user.role == 'carrier' %}
+    <a class="button" href="{{ url_for('scan_form') }}">+ Post scan</a>
+  {% endif %}
+{% endblock %}
+
 {% block content %}
-<p class="intro">{{ user.name }} <span class="muted">· Your freight at a glance</span></p>
-{% set totals = namespace(delivered=0, late=0) %}{% for s in shipments %}{% if status(s) == 'DELIVERED' %}{% set totals.delivered = totals.delivered + 1 %}{% endif %}{% if outcome(s) == 'Late' %}{% set totals.late = totals.late + 1 %}{% endif %}{% endfor %}
-<div class="stats"><div class="card"><span>Total shipments</span><strong>{{ shipments|length }}</strong></div><div class="card"><span>Awaiting delivery</span><strong>{{ shipments|length - totals.delivered }}</strong></div><div class="card"><span>Delivered</span><strong>{{ totals.delivered }}</strong></div><div class="card"><span>Late deliveries</span><strong>{{ totals.late }}</strong></div></div>
-<section class="card section"><div class="section-heading"><h2>Shipment activity</h2><a href="{{ url_for('shipments') }}">View all shipments →</a></div>{% include 'shipment_rows.html' %}</section>
+  <p class="intro">{{ user.name }} <span class="muted">- Shipment summary</span></p>
+  {% set totals = namespace(delivered=0, late=0) %}
+  {% for s in shipments %}
+    {% if status(s) == 'DELIVERED' %}
+      {% set totals.delivered = totals.delivered + 1 %}
+    {% endif %}
+    {% if outcome(s) == 'Late' %}
+      {% set totals.late = totals.late + 1 %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="stats">
+    <div class="card">
+      <span>Total shipments</span>
+      <strong>{{ shipments|length }}</strong>
+    </div>
+    <div class="card">
+      <span>Awaiting delivery</span>
+      <strong>{{ shipments|length - totals.delivered }}</strong>
+    </div>
+    <div class="card">
+      <span>Delivered</span>
+      <strong>{{ totals.delivered }}</strong>
+    </div>
+    <div class="card">
+      <span>Late deliveries</span>
+      <strong>{{ totals.late }}</strong>
+    </div>
+  </div>
+
+  <section class="card section">
+    <div class="section-heading">
+      <h2>Shipment activity</h2>
+      <a href="{{ url_for('shipments') }}">View all shipments</a>
+    </div>
+    {% include 'shipment_rows.html' %}
+  </section>
 {% endblock %}

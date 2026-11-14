@@ -300,7 +300,7 @@ def shipment_form(ident=None):
             return redirect(url_for('shipments'))
         except (ValueError, pymysql.MySQLError) as error:
             form_error(error)
-    options = [(h['id'], f"{h['id']} · {h['name']}") for h in store.hubs()]
+    options = [(h['id'], f"{h['id']} - {h['name']}") for h in store.hubs()]
     fields = [
         field('origin', 'Origin hub', 'select', options, row.get('origin', '')),
         field('destination', 'Destination hub', 'select', options, row.get('destination', '')),
@@ -323,14 +323,14 @@ def book(ident):
         except (ValueError, pymysql.MySQLError) as error:
             form_error(error)
     options = [
-        (d['id'], f"{d['id']} · {d['time']} · {d['remaining']:g} kg remaining")
+        (d['id'], f"{d['id']} - {d['time']} - {d['remaining']:g} kg remaining")
         for d in store.eligible_departures(shipment)
     ]
     return form_page(
         f'Book {ident}',
         [field('departure', 'Eligible departure', 'select', options)],
         url_for('shipments'),
-        f"{shipment['origin']} → {shipment['destination']} · {shipment['weight']:g} kg",
+        f"{shipment['origin']} to {shipment['destination']} - {shipment['weight']:g} kg",
         'Book shipment',
     )
 
@@ -428,7 +428,7 @@ def departure_form(ident=None):
             return redirect(url_for('departures'))
         except (ValueError, pymysql.MySQLError) as error:
             form_error(error)
-    vehicles = [(v['id'], f"{v['id']} · {v['type']}") for v in store.vehicles(current_user())]
+    vehicles = [(v['id'], f"{v['id']} - {v['type']}") for v in store.vehicles(current_user())]
     hubs = [(h['id'], h['id']) for h in store.hubs()]
     fields = [
         field('vehicle', 'Vehicle', 'select', vehicles, row.get('vehicle', '')),
@@ -462,7 +462,7 @@ def scan_form():
         except (ValueError, pymysql.MySQLError) as error:
             form_error(error)
     options = [
-        (s['id'], f"{s['id']} · {s['departure']}")
+        (s['id'], f"{s['id']} - {s['departure']}")
         for s in scoped_shipments()
         if store.status(s) != 'DELIVERED'
     ]
@@ -564,7 +564,7 @@ def report(kind):
 def error_page(error):
     return (
         render_template(
-            'error.html', title=f'{error.code} Â· {error.name}', message=error.description
+            'error.html', title=f'{error.code} - {error.name}', message=error.description
         ),
         error.code,
     )

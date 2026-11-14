@@ -164,7 +164,7 @@ class SQLStore:
     def elapsed(self, shipment):
         _, rows = self.numbered_query(3, {'shipment_code': shipment['id']})
         return [
-            [r[1], r[2], r[3].replace('_', ' ').title(), r[5], r[7] if r[7] is not None else '—']
+            [r[1], r[2], r[3].replace('_', ' ').title(), r[5], r[7] if r[7] is not None else 'N/A']
             for r in rows
         ]
 
@@ -540,7 +540,7 @@ class SQLStore:
             group = "'All delivered shipments'"
             grouping = ''
             if kind == 'lane':
-                group = "CONCAT(o.hub_code,' → ',dest.hub_code)"
+                group = "CONCAT(o.hub_code,' to ',dest.hub_code)"
                 grouping = 'GROUP BY ds.lane_id,o.hub_code,dest.hub_code'
             if kind == 'carrier':
                 group = 'c.username'

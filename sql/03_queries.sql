@@ -90,7 +90,8 @@ SELECT c.username AS carrier_code, c.display_name AS carrier_name,
 SELECT d.departure_id, d.departure_code,
        COUNT(DISTINCT s.shipper_id) AS distinct_shipper_count
   FROM departure AS d
-  JOIN shipment AS s ON s.departure_id = d.departure_id
+  JOIN booking AS b ON b.departure_id = d.departure_id
+  JOIN shipment AS s ON s.shipment_id = b.shipment_id
  GROUP BY d.departure_id, d.departure_code
 HAVING COUNT(DISTINCT s.shipper_id) >= 2
  ORDER BY d.departure_id;

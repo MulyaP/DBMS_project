@@ -69,7 +69,7 @@ SHIPMENT_SELECT = """
     SELECT s.shipment_id AS db_id, s.shipment_code AS id,
            u.username AS shipper, s.shipper_id AS owner_id, s.lane_id,
            o.hub_code AS origin, dest.hub_code AS destination,
-           d.departure_code AS departure, s.departure_id,
+           d.departure_code AS departure, b.departure_id,
            s.weight_kg AS weight, s.promised_date AS promised,
            s.current_status AS status, s.on_time, s.last_scan_seq AS scans
       FROM shipment s
@@ -77,7 +77,8 @@ SHIPMENT_SELECT = """
       JOIN lane l ON l.lane_id = s.lane_id
       JOIN hub o ON o.hub_id = l.origin_hub_id
       JOIN hub dest ON dest.hub_id = l.dest_hub_id
-      LEFT JOIN departure d ON d.departure_id = s.departure_id
+      LEFT JOIN booking b ON b.shipment_id = s.shipment_id
+      LEFT JOIN departure d ON d.departure_id = b.departure_id
       LEFT JOIN vehicle v ON v.vehicle_id = d.vehicle_id
 """
 
@@ -203,7 +204,11 @@ class SQLStore:
                     row = cursor.fetchone()
                     if not row or row['shipper_id'] != user['db_id']:
                         raise ValueError('Shipment not found or outside your account scope.')
-                    if row['departure_id'] is not None or row['last_scan_seq']:
+                    booking = fetch_one(
+                        'SELECT departure_id FROM booking WHERE shipment_id=%s FOR UPDATE',
+                        (row['shipment_id'],),
+                    )
+                    if booking or row['last_scan_seq']:
                         raise ValueError('Only unbooked shipments with no scans can be edited.')
                 lane_id = self.lane_id(values['origin'], values['destination'])
                 args = (lane_id, values['weight'], values['promised'])
@@ -348,8 +353,9 @@ class SQLStore:
                 if row:
                     cursor.execute(
                         (
-                            'SELECT COUNT(*) AS count, COALESCE(SUM(weight_kg),0) AS load_kg FROM shipment WHERE '
-                            'departure_id=%s FOR UPDATE'
+                            'SELECT COUNT(*) AS count, COALESCE(SUM(s.weight_kg),0) AS load_kg '
+                            'FROM booking b JOIN shipment s ON s.shipment_id=b.shipment_id '
+                            'WHERE b.departure_id=%s FOR UPDATE'
                         ),
                         (row['departure_id'],),
                     )
@@ -393,11 +399,17 @@ class SQLStore:
                 if not departure:
                     raise ValueError('Select a departure operated by your carrier.')
                 cursor.execute(
-                    'SELECT shipment_id, departure_id, last_scan_seq FROM shipment WHERE shipment_code=%s FOR UPDATE',
+                    'SELECT shipment_id, last_scan_seq FROM shipment WHERE shipment_code=%s FOR UPDATE',
                     (values['shipment'],),
                 )
                 shipment = cursor.fetchone()
-                if not shipment or shipment['departure_id'] != departure['departure_id']:
+                booking = None
+                if shipment:
+                    booking = fetch_one(
+                        'SELECT departure_id FROM booking WHERE shipment_id=%s FOR UPDATE',
+                        (shipment['shipment_id'],),
+                    )
+                if not booking or booking['departure_id'] != departure['departure_id']:
                     raise ValueError(
                         'Select a shipment booked onto the specified departure you operate.'
                     )
@@ -450,7 +462,8 @@ class SQLStore:
                   JOIN lane l ON l.lane_id=s.lane_id
                   JOIN hub o ON o.hub_id=l.origin_hub_id
                   JOIN hub dest ON dest.hub_id=l.dest_hub_id
-                  LEFT JOIN departure d ON d.departure_id=s.departure_id
+                  LEFT JOIN booking b ON b.shipment_id=s.shipment_id
+                  LEFT JOIN departure d ON d.departure_id=b.departure_id
                   LEFT JOIN vehicle v ON v.vehicle_id=d.vehicle_id
                  WHERE """
                 + condition
@@ -498,7 +511,8 @@ class SQLStore:
                        o.hub_code AS origin, dest.hub_code AS destination,
                        SUM(s.weight_kg) AS shipment_kg
                   FROM shipment s
-                  JOIN departure d ON d.departure_id=s.departure_id
+                  JOIN booking b ON b.shipment_id=s.shipment_id
+                  JOIN departure d ON d.departure_id=b.departure_id
                   JOIN lane l ON l.lane_id=s.lane_id
                   JOIN hub o ON o.hub_id=l.origin_hub_id
                   JOIN hub dest ON dest.hub_id=l.dest_hub_id

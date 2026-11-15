@@ -7,13 +7,12 @@ from decimal import Decimal, InvalidOperation
 from functools import wraps
 from pathlib import Path
 
-import click
 import pymysql
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from db import DatabaseConfigurationError, close_db, get_db
+from db import DatabaseConfigurationError, close_db
 from store import SQLStore, STATUSES, TYPES
 
 load_dotenv(Path(__file__).with_name('.env'))
@@ -589,50 +588,6 @@ def database_error(error):
         'configuration' if isinstance(error, DatabaseConfigurationError) else error.args[0],
     )
     return render_template('error.html', title='Database unavailable', message=message), 503
-
-
-# Database check command
-
-
-@app.cli.command('check-db')
-def check_db():
-    """Check credentials, server version, project objects, and sample counts."""
-    try:
-        with get_db().cursor() as cursor:
-            cursor.execute('SELECT VERSION() AS version, DATABASE() AS db_name')
-            info = cursor.fetchone()
-            click.echo(f"Connected to {info['db_name']} on MariaDB/MySQL {info['version']}")
-            cursor.execute('SELECT COUNT(*) AS count FROM shipment')
-            click.echo(f"Shipments: {cursor.fetchone()['count']}")
-            cursor.execute('SELECT COUNT(*) AS count FROM scan_event')
-            click.echo(f"Scans: {cursor.fetchone()['count']}")
-            cursor.execute(
-                (
-                    'SELECT COUNT(*) AS count FROM information_schema.ROUTINES WHERE '
-                    "ROUTINE_SCHEMA=DATABASE() AND ROUTINE_NAME='book_shipment'"
-                )
-            )
-            procedures = cursor.fetchone()['count']
-            cursor.execute(
-                (
-                    'SELECT COUNT(*) AS count FROM information_schema.TRIGGERS WHERE '
-                    'TRIGGER_SCHEMA=DATABASE() AND TRIGGER_NAME IN '
-                    "('enforce_scan_chronology','maintain_shipment_status')"
-                )
-            )
-            triggers = cursor.fetchone()['count']
-            if procedures != 1 or triggers != 2:
-                raise click.ClickException(
-                    'The required booking procedure or scan triggers are missing.'
-                )
-            cursor.execute('SELECT COUNT(*) AS count FROM v_departure_load')
-            cursor.execute('SELECT COUNT(*) AS count FROM v_delivered_shipment')
-            click.echo('Booking procedure, both scan triggers, and reporting views are present.')
-    except (DatabaseConfigurationError, pymysql.MySQLError) as error:
-        code = 'configuration' if isinstance(error, DatabaseConfigurationError) else error.args[0]
-        raise click.ClickException(
-            f'Database check failed ({code}). Check .env, VPN, and the loaded schema.'
-        )
 
 
 if __name__ == '__main__':

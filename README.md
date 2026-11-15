@@ -2,28 +2,14 @@
 
 A simple Flask UI and Python backend for the CSC 540 logistics project.
 
+Mulya Patel (mspate22), Namit Patel (npatel44), Pranshav Patel (ppatel49).
+
 The app uses PyMySQL connections and cursors to execute SQL against MariaDB 10.5.
 Records persist in the database across Flask restarts.
 
-## Run on Windows
-
-Use Python 3.10 or newer. Open a terminal in this folder and run:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m flask --app app check-db
-.venv\Scripts\python.exe app.py
-```
-
-Open http://127.0.0.1:5000 in a browser. Stop with Ctrl+C.
-
-On macOS/Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
-
 ## Database configuration
 
-Before running check-db or starting the app, enter your MariaDB password in the
-local `.env` file. For a new checkout, copy `.env.example` to `.env` first.
+Before starting the app, enter your MariaDB password in the local `.env` file. For a new checkout, copy `.env.example` to `.env` first.
 
 ```dotenv
 DB_HOST=classdb2.csc.ncsu.edu
@@ -51,10 +37,23 @@ The selected database must already contain the objects and data from these files
 2. sql/02_sample_data.sql: the professor's supplied data and seed checks.
 3. sql/03_queries.sql: the six required analytical queries.
 
-These are installation scripts for empty project tables. After initial loading,
-use check-db to verify the connection and required objects. It does not reload data.
-The current integration expects the integer IDs and separate unique code columns
-in 01_schema.sql. Forms display codes such as S14 while SQL relationships use IDs.
+Run these files in order against empty project tables, stopping if an error occurs.
+Keep sql/03_queries.sql with the application; View Queries reads it at runtime.
+Forms display codes such as S14 while SQL relationships use integer IDs.
+
+## Run on Windows
+
+Use Python 3.10 or newer. Open a terminal in this folder and run:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe app.py
+```
+
+Open http://127.0.0.1:5000 in a browser. Stop with Ctrl+C.
+
+On macOS/Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
 
 ## Sample accounts
 
@@ -71,7 +70,7 @@ Select the corresponding role before signing in. View Queries is also accessible
 ## Current behavior
 
 The seed SQL loads the supplied sample dataset: 11 hubs,
-8 accounts, 7 vehicles, 10 departures, 23 shipments, and 69 scans.
+8 accounts, 7 vehicles, 10 departures, 23 shipments, 22 bookings, and 69 scans.
 The application reads and writes those records in MariaDB. The JSON file is a
 reference copy of the professor's sample data and is not loaded by the backend.
 
@@ -105,9 +104,12 @@ Autocommit reads leave the connection ready for the booking procedure, which own
 its transaction. Other writes explicitly begin, commit, or roll back a transaction.
 
 store.py contains parameterized SQL and explicit ownership filters. Bookings call
-book_shipment. Scan insertion is authorized and sequenced under row locks, then
+book_shipment and are stored in booking, keyed by shipment_id. Unbooked shipments
+retain their requested lane. Scan insertion is authorized and sequenced under row locks, then
 the database triggers validate chronology and maintain delivery state. Vehicle
-and subtype inserts commit together. Departure capacity edits lock the departure
+and subtype inserts commit together. Subtype insert/update triggers check the
+parent vehicle type, and a parent trigger prevents type changes. The subtype
+tables contain only their ID and type-specific attributes. Departure capacity edits lock the departure
 and recheck its booked load before updating it.
 
 The View Queries screens execute the six SELECT statements read directly from
@@ -115,10 +117,21 @@ sql/03_queries.sql, with values bound through the driver. Additional role report
 also use SQL, including window functions for rankings and cumulative totals.
 Weights and capacities use Python Decimal values when saving records.
 
+## Design documents
+
+The updated report is in report/CSC540-Deliverable2-Report.pdf, with editable
+text in the matching Markdown file. report/ER-model.svg shows the current tables
+and relationships; report/ER-model.drawio is the editable diagram.
+
+The normalization changes separate booking facts from shipment and remove the
+constant vehicle_type columns from the three vehicle subtype tables. Shipment
+keeps its requested lane so it can exist before a departure is selected. The
+booking procedure checks that this lane matches the departure's lane.
+
 ## Connection troubleshooting
 
 - Missing password: fill DB_PASSWORD in .env and restart Flask.
 - Cannot reach server: check the VPN and DB_HOST/DB_PORT.
 - Login rejected: check DB_USER and the MariaDB password.
 - Missing table, column, procedure or view: compare the installed schema with
-  sql/01_schema.sql, including the code and latest-scan columns.
+  sql/01_schema.sql, including booking, the code columns, and latest-scan columns.
